@@ -45,5 +45,61 @@ def most_expensive_baked_good():
     most_expensive_serialized = most_expensive.to_dict()
     return make_response( most_expensive_serialized,   200  )
 
+@app.route('/baked_goods', methods=['GET','POST'])
+def new_baked_goods():
+    if request.method=='GET':
+        baked_goods=[]
+        for baked_good in BakedGood.query.all():
+            baked_good_dict=baked_good.to_dict()
+            baked_goods.append(baked_good_dict)
+        response=make_response(baked_goods,200)
+        return response
+    elif request.method=='POST':
+        new_baked_good=BakedGood(
+            name=request.form.get("name"),
+            price=request.form.get("price"),
+        )
+        db.session(new_baked_good)
+        db.session.commit()
+    baked_good_dict=new_baked_good.to_dict()
+    response=make_response(baked_good_dict,201)
+    return response
+
+@app.route('/bakeries/<int:id>',methods=["GET","PATCH"])
+def update_bakery(id):
+    bakery=Bakery.query.filter(Bakery.id==id).first()
+    if bakery==None:
+        response_body={
+            "message": "This record does not exist in our database. Please try again."
+        }
+        response=make_response(response_body,404)
+        return response
+    else:
+        if request.method=="GET":
+            bakery_dict=bakery.to_dict()
+            response=make_response(bakery_dict,200)
+            return response
+        elif request.method=="PATCH":
+            for attr in request.form:
+                setattr(bakery,attr,request.form(attr))
+            db.session.add(bakery)
+            db.commit()
+            bakery_dict=bakery.to_dict
+            response=make_response(bakery_dict,200)
+            return response
+        
+@app.route("/baked_goods/<int:id>", methods=["DELETE"])
+def delete_baked_goods(id):
+        baked_good=BakedGood.query.filter(BakedGood.id==id).first()
+        db.session.delete(baked_good)
+        db.commit()
+        response_body={ "delete_successful": True,
+                "message": "baked good deleted."}
+
+        response=make_response(response_body,200)
+        return response
+
+
+    
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
