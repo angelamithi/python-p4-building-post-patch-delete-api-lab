@@ -58,8 +58,9 @@ def new_baked_goods():
         new_baked_good=BakedGood(
             name=request.form.get("name"),
             price=request.form.get("price"),
+            bakery_id=request.form.get("bakery_id")
         )
-        db.session(new_baked_good)
+        db.session.add(new_baked_good)
         db.session.commit()
     baked_good_dict=new_baked_good.to_dict()
     response=make_response(baked_good_dict,201)
@@ -81,10 +82,10 @@ def update_bakery(id):
             return response
         elif request.method=="PATCH":
             for attr in request.form:
-                setattr(bakery,attr,request.form(attr))
+                setattr(bakery,attr,request.form.get(attr))
             db.session.add(bakery)
-            db.commit()
-            bakery_dict=bakery.to_dict
+            db.session.commit()
+            bakery_dict=bakery.to_dict()
             response=make_response(bakery_dict,200)
             return response
         
@@ -92,7 +93,7 @@ def update_bakery(id):
 def delete_baked_goods(id):
         baked_good=BakedGood.query.filter(BakedGood.id==id).first()
         db.session.delete(baked_good)
-        db.commit()
+        db.session.commit()
         response_body={ "delete_successful": True,
                 "message": "baked good deleted."}
 
